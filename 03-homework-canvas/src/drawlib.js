@@ -1,4 +1,4 @@
-import * as Color from "./color.js";
+import * as Color from './color.js';
 
 /**
  * @typedef { Color.Color} Color
@@ -24,7 +24,7 @@ import * as Color from "./color.js";
  * @returns {Shape}
  */
 export function square(color, side) {
-  return { kind: "Square", color, side, xCenter: 0, yCenter: 0 };
+  return { kind: 'Square', color, side, xCenter: 0, yCenter: 0 };
 }
 
 /**
@@ -33,7 +33,7 @@ export function square(color, side) {
  * @returns {Shape}
  */
 export function circle(color, radius) {
-  return { kind: "Circle", radius, color, xCenter: 0, yCenter: 0 };
+  return { kind: 'Circle', radius, color, xCenter: 0, yCenter: 0 };
 }
 
 /**
@@ -41,7 +41,7 @@ export function circle(color, radius) {
  * @returns {Shape}
  */
 export function group(shapes) {
-  return { kind: "Group", shapes };
+  return { kind: 'Group', shapes };
 }
 
 /**
@@ -55,9 +55,16 @@ export function group(shapes) {
  */
 export function move(dx, dy, shape) {
   switch (shape.kind) {
-    // TODO 1
+    case 'Circle':
+      return { ...shape, xCenter: shape.xCenter + dx, yCenter: shape.yCenter + dy };
+
+    case 'Square':
+      return { ...shape, xCenter: shape.xCenter + dx, yCenter: shape.yCenter + dy };
+
+    case 'Group':
+      return { ...shape, shapes: shape.shapes.map((shape) => move(dx, dy, shape)) };
     default:
-      throw "Unexpected! Some case is missing";
+      throw 'Unexpected! Some case is missing';
   }
 }
 
@@ -79,29 +86,17 @@ export function renderCentered(shape, context) {
  */
 function render(shape, context) {
   switch (shape.kind) {
-    case "Circle":
-      renderCircle(
-        shape.color,
-        shape.xCenter,
-        shape.yCenter,
-        shape.radius,
-        context
-      );
+    case 'Circle':
+      renderCircle(shape.color, shape.xCenter, shape.yCenter, shape.radius, context);
       break;
-    case "Square":
-      renderSquare(
-        shape.color,
-        shape.xCenter,
-        shape.yCenter,
-        shape.side,
-        context
-      );
+    case 'Square':
+      renderSquare(shape.color, shape.xCenter, shape.yCenter, shape.side, context);
       break;
-    case "Group":
+    case 'Group':
       shape.shapes.forEach((shape) => render(shape, context));
       break;
     default:
-      throw "Unexpected! Some case is missing";
+      throw 'Unexpected! Some case is missing';
   }
 }
 
@@ -113,8 +108,16 @@ function render(shape, context) {
  * @param {CanvasRenderingContext2D} context
  */
 function renderCircle(color, xCenter, yCenter, radius, context) {
-  // TODO 2
-  // (search for how to draw an "ellipse" in canvas)
+  const height = radius * 2;
+  context.beginPath();
+
+  context.moveTo(xCenter, yCenter - height / 2);
+
+  context.arc(xCenter, yCenter, radius, 0, 2 * Math.PI);
+
+  context.fillStyle = Color.render(color);
+  context.fill();
+  context.closePath();
 }
 
 /**
