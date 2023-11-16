@@ -15,6 +15,7 @@ import * as Color from './color.js';
    | {kind: "Square";color: Color;side : number; xCenter: number; yCenter:number }
    | {kind: "Circle";radius: number;color: Color; xCenter: number; yCenter: number}
    | {kind: "Group"; shapes : Array<Shape>}
+   | {kind: "Polygon"; color: Color; points: Array<{x:number;y:number}>}
    } Shape
 */
 
@@ -24,7 +25,7 @@ import * as Color from './color.js';
  * @returns {Shape}
  */
 export function square(color, side) {
-  return { kind: 'Square', color, side, xCenter: 0, yCenter: 0 };
+  return rectangle(color, side, side);
 }
 
 /**
@@ -45,6 +46,16 @@ export function group(shapes) {
 }
 
 /**
+ * 
+ * @param {Color} color
+ * @param {Array<{x:number;y:number}>} points
+ * @returns {Shape}
+ */
+export function polygon(color, points) {
+  return { kind: 'Polygon', color, points };
+}
+
+/**
  * Add `dx` and `dy` respectively to the `x` and `y` of
  * the shape. Apply this to all the sub shapes if the given one
  * is a "Group"
@@ -58,11 +69,11 @@ export function move(dx, dy, shape) {
     case 'Circle':
       return { ...shape, xCenter: shape.xCenter + dx, yCenter: shape.yCenter + dy };
 
-    case 'Square':
-      return { ...shape, xCenter: shape.xCenter + dx, yCenter: shape.yCenter + dy };
-
     case 'Group':
       return { ...shape, shapes: shape.shapes.map((shape) => move(dx, dy, shape)) };
+
+    case 'Polygon':
+      return { ...shape, points: shape.points.map((point) => ({ x: point.x + dx, y: point.y + dy })) };
     default:
       throw 'Unexpected! Some case is missing';
   }
@@ -89,11 +100,11 @@ function render(shape, context) {
     case 'Circle':
       renderCircle(shape.color, shape.xCenter, shape.yCenter, shape.radius, context);
       break;
-    case 'Square':
-      renderSquare(shape.color, shape.xCenter, shape.yCenter, shape.side, context);
-      break;
     case 'Group':
       shape.shapes.forEach((shape) => render(shape, context));
+      break;
+    case 'Polygon':
+      renderPolygon(shape.color, shape.points, context);
       break;
     default:
       throw 'Unexpected! Some case is missing';
@@ -122,22 +133,39 @@ function renderCircle(color, xCenter, yCenter, radius, context) {
 
 /**
  * @param {Color} color
- * @param {number} side
- * @param {number} xCenter
- * @param {number} yCenter
- * @param {CanvasRenderingContext2D} context
- */
-function renderSquare(color, xCenter, yCenter, side, context) {
-  // Note: we could have used `context.rect` but the following
-  // code will be more easily translatable to draw polygon
-  // (see part 2 of the homework)
-  const path = new Path2D();
-  const halfSide = side / 2;
-  path.moveTo(xCenter - halfSide, yCenter - halfSide);
-  path.lineTo(xCenter + halfSide, yCenter - halfSide);
-  path.lineTo(xCenter + halfSide, yCenter + halfSide);
-  path.lineTo(xCenter - halfSide, yCenter + halfSide);
-  path.closePath();
+* @param {Array<{x:number;y:number}>} points
+* @param {CanvasRenderingContext2D} context
+*/
+function renderPolygon(color, points, context) {
   context.fillStyle = Color.render(color);
-  context.fill(path);
+  context.fill(polygonToPath(points));
+}
+
+/**
+* @returns {Path2D}
+* @param {Array<{x:number;y:number}>} points
+*/
+function polygonToPath(points) {
+  const path = new Path2D();
+  path.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    path.lineTo(points[i].x, points[i].y);
+  }
+  path.closePath();
+  return path;
+} 
+
+/**
+ * @param {Color} color
+ * @param {number} width
+ * @param {number} height
+ * @returns {Shape}
+ */
+export function rectangle(color, width, height) {
+  return polygon(color, [
+    { x: -width / 2, y: -height / 2 },
+    { x: width / 2, y: -height / 2 },
+    { x: width / 2, y: height / 2 },
+    { x: -width / 2, y: height / 2 },
+  ]);
 }

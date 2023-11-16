@@ -70,6 +70,8 @@ export const white = rgb(0xff, 0xff, 0xff);
 
 export const black = rgb(0x00, 0x00, 0x00);
 
+export const pink = rgb(0xff, 0x00, 0xff);
+
 /**
  * @param {Color} color
  * @returns {string}
