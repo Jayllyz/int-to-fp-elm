@@ -106,8 +106,8 @@ candidates =
 countLegendaryHeroes : List String -> Int
 countLegendaryHeroes heroes =
     -- Maybe this will be good this time ??
-    42
-
+    List.map (\hero -> if String.length hero > 7 then 1 else 0) heroes
+        |> List.sum
 
 test =
     countLegendaryHeroes candidates == 23
